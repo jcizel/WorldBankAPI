@@ -167,6 +167,9 @@ getWorldBankSeriesInfo <- function(url="http://api.worldbank.org"
         return(result)
     }
 
+## s <- getWorldBankIndicatorList(source = "2")
+## s[toupper(sourceNote) %like% 'LABOR'][['name']]
+
 
 
 ##' .. content for \description{} (no empty lines) ..
