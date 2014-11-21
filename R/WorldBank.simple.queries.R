@@ -1,8 +1,4 @@
-getWorldBankListOfVariables <- function(cores = 4,
-                                        outfile = "./inst/extdata/WorldBankListOfVariables.csv"){
-    cl <- parallel:::makeCluster(cores)
-    doParallel:::registerDoParallel(cl)
-
+getWorldBankListOfVariables <- function(outfile = "./inst/extdata/WorldBankListOfVariables.csv"){
     sources <- getWorldBankSources()[,list(id,name)]
 
     .o <-
@@ -102,7 +98,7 @@ getWorldBankDataSeries <- function(
 
     result <- .r[!is.na(value)]
     
-    return(result)
+    return(unique(result))
 }
 
 
