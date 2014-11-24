@@ -105,6 +105,7 @@ getWorldBankDataSeries <- function(
 ## queryWorldBankVariableList("debt")
 ## queryWorldBankVariableList("gdp")
 ## queryWorldBankVariableList("revenue")
-
+l <- queryWorldBankVariableList(".")
+dt <- getWorldBankDataSeries(indicators = l)
 
 

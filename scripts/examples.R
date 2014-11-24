@@ -81,3 +81,5 @@ o2[country.id == 'AR']
 
 indicators <- queryWorldBankVariableList('consumption')
 indicators
+
+indicators <- queryWorldBankVariableList('use of imf')
