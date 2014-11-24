@@ -186,37 +186,34 @@ getWorldBankSeriesInfo <- function(url="http://api.worldbank.org"
 ##' @param per_page 
 ##' @return data.table with query result.
 ##' @author Janko Cizel
-getWorldBankDataset <- function(url="http://api.worldbank.org"
-                               ,source = "20"
-                               ,topic = NULL
-                               ,countries = "all"
-                                ## ,frequency = "Y"
-                               ,MRV = "100"
-                               ,format = "json"
-                               ,per_page = "10000"
-                                )
-    {
-        if (is.null(topic))
-            ids <- getWorldBankIndicatorList(source = source)[["id"]]
-        else
-            ids <- getWorldBankIndicatorListt(topic = topic)[["id"]]
-        
-        result.list <- list()
-        for (x in ids){
+getWorldBankDataset <- function(
+    url="http://api.worldbank.org"
+   ,source = "20"
+   ,topic = NULL
+   ,countries = "all"
+   ,MRV = "100"
+   ,format = "json"
+   ,per_page = "10000"
+){
+    if (is.null(topic))
+        ids <- getWorldBankIndicatorList(source = source)[["id"]]
+    else
+        ids <- getWorldBankIndicatorListt(topic = topic)[["id"]]
+    
+    result.list <-
+        foreach (x = ids) %dopar% {
             cat(x,"\n")
             
             string<- paste(url
-                           ,"countries", paste(countries,sep=";")
-                           ,"indicators", x
-                           ,sep = "/"
+                          ,"countries", paste(countries,sep=";")
+                          ,"indicators", x
+                          ,sep = "/"
                            )
 
             query <- paste0(string,
                             "?",
                             "format=",format,
                             "&per_page=",per_page
-                            ## "&frequency=",frequency,
-                            ## "&date=1960M01:2014M12"
                             )
 
             cat(query,"\n")
@@ -249,16 +246,58 @@ getWorldBankDataset <- function(url="http://api.worldbank.org"
             })
 
             dat <- rbindlist(dat, fill = TRUE)                        
-            
-            result.list[[x]] <- dat
+
+            dat[!is.na(value)]
         }
-        
-        result <- rbindlist(result.list, fill = TRUE, use.names = TRUE)
-        return(result)
+    
+    result <- rbindlist(result.list, fill = TRUE, use.names = TRUE)
+    return(result)
+}
+
+## df <- getWorldBankDataset(source = 20)
+
+getAllWorldBankData <- function(datafolder = './inst/extdata'){
+
+    sources <- getWorldBankSources()
+
+    sources[, name := gsub("[[:punct:]]","_",name)]    
+    sources[, name := gsub("[[:space:]]",".",name)]
+    
+    ## CHECK WHETHER THE FILE ALREADY EXISTS
+    .fileExists <- function(file,folder){
+        return(file %in% list.files(path = folder))
     }
 
-## df <- get.WorldBank.dataset(source = 20)
+    for (x in sources$id){
+        folder <- paste0(datafolder,'/',sources[id==x]$name)
+        if (!.fileExists(file = sources[id==x]$name, folder = paste0(datafolder))){
+            system(command = paste0('mkdir ',folder))
+        }
 
+        flist <- list.files(path = folder, full.names = TRUE)
+
+        if (length(flist) > 0){
+            if (sum(sapply(flist, function(x) {
+                o <- file.info(x)$size/(2^20)
+                if (is.na(o)) o <- 0
+                o
+            }))>1){
+                next
+            }
+        }
+        
+        .o <- try(getWorldBankDataset(source = x))
+
+        if ("try-error" %in% class(.o))
+            next
+        
+        write.csv(x = .o,
+                  file = paste0(folder,"/DATA.csv"))
+    }
+    return(NULL)
+}
+
+## getAllWorldBankData()
 
 ##' .. content for \description{} (no empty lines) ..
 ##'
