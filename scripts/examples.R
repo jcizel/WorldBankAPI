@@ -82,4 +82,21 @@ o2[country.id == 'AR']
 indicators <- queryWorldBankVariableList('consumption')
 indicators
 
-indicators <- queryWorldBankVariableList('use of imf')
+indicators <- queryWorldBankVariableList('use of imf')$id
+
+
+
+raw.data <- try(fromJSON(query))
+
+require(rlist)
+require(pipeR)
+
+raw.data[[2]] %>>%
+list.cases(country)
+
+summary(raw.data)
+
+
+
+
+

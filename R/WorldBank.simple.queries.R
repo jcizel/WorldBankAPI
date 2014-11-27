@@ -61,7 +61,7 @@ getWorldBankDataSeries <- function(
 
         if ("try-error" %in% class(raw.data)){
             warning(x, " failed to load.")
-            next
+            return(NULL)
         } else {
             if (raw.data[[1]][["pages"]] <= 1){
                 data <- raw.data[[2]]
@@ -101,11 +101,35 @@ getWorldBankDataSeries <- function(
     return(unique(result))
 }
 
+getQuickWorldBankDataset <- function(pattern){
+    ids <- queryWorldBankVariableList(pattern = pattern)[['id']]
+    cat("Downloading the following set of indicators: \n")
+    cat(ids,'\n')
+    dt <- getWorldBankDataSeries(indicators = ids)
+    out <- createWorldBankDataset(dt)
+
+    out <- structure(out,
+                     searchquery = pattern)
+    return(out)
+}
 
 ## queryWorldBankVariableList("debt")
 ## queryWorldBankVariableList("gdp")
 ## queryWorldBankVariableList("revenue")
 ## l <- queryWorldBankVariableList(".")
 ## dt <- getWorldBankDataSeries(indicators = l)
+## dt <- getQuickWorldBankDataset('revenue')
+## lookup(dt)
+
+## dt2 <- getQuickWorldBankDataset('inflation')
+## lookup(dt2)
+## dt2[iso3 =='USA']
 
 
+## dt3 <- getQuickWorldBankDataset('gdp growth')
+## lookup(dt3)
+## dt3[iso3 =='USA']
+
+## dt4 <- getQuickWorldBankDataset('dummy')
+## lookup(dt3)
+## dt4[iso3 =='NLD']

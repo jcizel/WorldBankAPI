@@ -219,9 +219,12 @@ getWorldBankDataset <- function(
             cat(query,"\n")
             raw.data <- try(fromJSON(query))
 
+
+            ## tryCatch()
+            
             if ("try-error" %in% class(raw.data)){
                 warning(x, " failed to load.")
-                next
+                return(NULL)
             } else {
                 if (raw.data[[1]][["pages"]] <= 1){
                     data <- raw.data[[2]]
@@ -229,11 +232,11 @@ getWorldBankDataset <- function(
                     data <- raw.data[[2]]
                     for (y in 2:raw.data[[1]][["pages"]]){
                         info <- raw.data[[1]]
-                        paste(str(info))
+                        ## paste(str(info))
                         raw.data <- try(fromJSON(paste0(query,"&page=",y)))
                         if ("try-error" %in% class(raw.data)){
                             warning(x, " page ", y , " failed to load.")
-                            next
+                            next()
                         } else {
                             data <- c(data,raw.data[[2]])
                         }
@@ -247,8 +250,10 @@ getWorldBankDataset <- function(
 
             dat <- rbindlist(dat, fill = TRUE)                        
 
-            dat[!is.na(value)]
+            return(dat[!is.na(value)])
         }
+
+    result.list <- Filter(function(x) !is.null(x), result.list)
     
     result <- rbindlist(result.list, fill = TRUE, use.names = TRUE)
     return(result)
@@ -256,9 +261,13 @@ getWorldBankDataset <- function(
 
 ## df <- getWorldBankDataset(source = 20)
 
-getAllWorldBankData <- function(datafolder = './inst/extdata'){
+getAllWorldBankData <- function(datafolder = './inst/extdata',
+                                sourceids  = c('2','30','15','6','20','23','22','43','3')){
 
     sources <- getWorldBankSources()
+
+    if (!is.null(sourceids))
+        sources <- sources[id %in% sourceids]
 
     sources[, name := gsub("[[:punct:]]","_",name)]    
     sources[, name := gsub("[[:space:]]",".",name)]
@@ -269,6 +278,8 @@ getAllWorldBankData <- function(datafolder = './inst/extdata'){
     }
 
     for (x in sources$id){
+        cat("Processing:",sources[id==x]$name,"\n\n")
+        
         folder <- paste0(datafolder,'/',sources[id==x]$name)
         if (!.fileExists(file = sources[id==x]$name, folder = paste0(datafolder))){
             system(command = paste0('mkdir ',folder))
@@ -285,7 +296,7 @@ getAllWorldBankData <- function(datafolder = './inst/extdata'){
                 next
             }
         }
-        
+
         .o <- try(getWorldBankDataset(source = x))
 
         if ("try-error" %in% class(.o))
@@ -333,7 +344,7 @@ createWorldBankDataset <- function(df,
                             formula = formula,
                             value.var = 'val')
 
-    attributes(out)$colnames <- local({
+    lookup <- local({
         o <- unique(dt[, c(colVar,labelVar), with = FALSE])
         o[,nonmissRate:=0]
         setkeyv(o, colVar)
@@ -346,219 +357,24 @@ createWorldBankDataset <- function(df,
         o
     })
 
+    out[, iso3 := .lookupISOCode(country.id)]
+
+    out <- 
+        structure(out,
+                  lookup = lookup)
+
     return(out)
 }
 
-## test <- .createDataset(df)
-## test
-## options(width = 200)
-## lookup <- (attributes(test)$colnames)
-
-## options(width = 120)
-## test[, DATE := {
-##     x <- date
-##     year <- gsub("([0-9]{4})Q([0-9]{1})","\\1",x)
-##     qtr <- gsub("([0-9]{4})Q([0-9]{1})","\\2",x)
-##     as.numeric(year) + as.numeric(qtr)/4
-## }]
-
-## require(ggplot2)
-## test[country.id == 'SI',
-##      qplot(x = DATE,
-##            y = DP.DOD.DECF.CR.CG.CD,
-##            geom = 'line')]
+lookup <- function(dt){
+    o <- attributes(dt)$lookup[order(nonmissRate, decreasing = TRUE)]
+    ## o[, paste(strwrap(indicator.value,width = 20, simplify = FALSE), collapse = "\\n")]
+    return(o)
+}
 
 
-## data.frame(lookup)
-## test[country.id == 'SI',
-##      qplot(x = DATE,
-##            y = DP.DOD.DECF.CR.CG.CD,
-##            geom = 'line',
-##            main = .lookupName(query = 'DP.DOD.DECF.CR.CG.CD',lookup.table = lookup,id.var = 'indicator.id', label.var = 'indicator.value'))]
-
-
-## require(data.table)
-## get.WorldBank.indicatorlist(source = 20)
-## get.WorldBank.indicatorlist(topic = 20)
-
-## get.WorldBank.indicatorlist(source = 6)
-## get.WorldBank.indicatorlist(source = 2)
-## get.WorldBank.indicatorlist(source = 22)
-## get.WorldBank.indicatorlist(source = 23)
-
-## get.WorldBank.countries()
-## get.WorldBank.countries(type = "incomeLevels")
-## get.WorldBank.countries(type = "lendingTypes")
-
-## get.WorldBank.countries(type = "topics")
-
-
-
-## PATH.DATA <- "~/Documents/Dropbox/Data"
-
-
-## write.table(get.WorldBank.souces(),
-##             file = paste0(PATH.DATA, "/World Bank/wb.sources.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.countries(type = "topics"),
-##             file = paste0(PATH.DATA, "/World Bank/wb.topics.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.countries(),
-##             file = paste0(PATH.DATA, "/World Bank/wb.countries.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(topic = 20),
-##             file = paste0(PATH.DATA, "/World Bank/WB.ExternalDebt.Indicators.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(topic = 3),
-##             file = paste0(PATH.DATA, "/World Bank/WB.EconomyAndGrowth.Indicators.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(topic = 13),
-##             file = paste0(PATH.DATA, "/World Bank/WB.PublicSector.Indicators.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(topic = 7),
-##             file = paste0(PATH.DATA, "/World Bank/financial.sector.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(topic = 12),
-##             file = paste0(PATH.DATA, "/World Bank/WB.PrivateSector.Indicators.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(get.WorldBank.indicatorlist(source = 15),
-##             file = paste0(PATH.DATA, "/World Bank/WB.GlobalEconomicMonitor.Indicators.csv"),
-##             row.names = FALSE,
-##             sep = "||")
-
-## write.table(dt <- get.WorldBank.dataset(source = "15"
-##                                         ),
-##             file = paste0(PATH.DATA, "/World Bank/Source_GlobalEconomicMonitor.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(dt <- get.WorldBank.dataset(topic = "7"),
-##             file = paste0(PATH.DATA, "/World Bank/Topic_FinancialSector.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(dt <- get.WorldBank.dataset(topic = "3"),
-##             file = paste0(PATH.DATA, "/World Bank/Topic_EconomyAndGrowth.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(dt <- get.WorldBank.dataset(topic = "20"),
-##             file = paste0(PATH.DATA, "/World Bank/Topic_ExternalDebt.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## write.table(dt <- get.WorldBank.dataset(topic = "13"),
-##             file = paste0(PATH.DATA, "/World Bank/Topic_PublicSector.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-
-
-## dt <- fread(paste0(PATH.DATA, "/World Bank/Topic_FinancialSector.csv"))
-
-
-
-
-
-
-## ################################################################################
-## ## QPSD                                                                       ##
-## ################################################################################
-## wb.qpsd <- get.WorldBank.dataset(source = 20)
-## wb.qpsd.static <- get.WorldBank.SeriesInfo(source = 20)
-
-## write.table(wb.qpsd,
-##             file = paste0(PATH.DATA, "/World Bank/QPSD.csv"),
-##             row.names = FALSE,
-##             sep = ",")
-
-## wb.qpsd <- fread(paste0(PATH.DATA, "/World Bank/QPSD.csv"))
-
-## wb.qpsd <- wb.qpsd[!is.na(value) & value!=""]
-
-## wb.qpsd[, c("year","month","date") := {
-##     d <- str_split(date, "Q")
-
-##     year = as.numeric(sapply(d, function(x) x[[1]]))
-##     month = 3 * as.numeric(sapply(d, function(x) x[[2]]))
-
-##     list(year,
-##          month,
-##          as.Date(paste0(year,"-",month,"-1",format = "%Y-%m-%d")))
-## }]
-
-
-
-## wb.qpsd.summary <-
-##     wb.qpsd[!is.na(value), {
-##         dt <- .SD[, list(year, value)]
-##         if (dim(dt)[[1]] == 0){
-##             list(min.year = 0,
-##                  max.year = 0)
-##         } else {
-##             list(min.year = as.numeric(min(dt$year, na.rm = TRUE)),
-##                  max.year = as.numeric(max(dt$year, na.rm = TRUE)))
-##         }
-##     }
-##         , by = list(country.id, indicator.id, indicator.value)]
-
-## wb.qpsd.summary[country.id == "RU"]
-
-
-## ################################################################################
-## ## GET SOURCES                                                                ##
-## ################################################################################
-## get.WorldBank.souces()
-
-## source.ids <- c(6,22)
-
-## result.list <- list()
-## for (x in source.ids){
-##     dt <- get.WorldBank.dataset(source = x)
-##     ## dt.static <- get.WorldBank.SeriesInfo(source = x)
-
-##     write.table(dt,
-##                 file = paste0(PATH.DATA, "/World Bank/SOURCE_",x,".csv"),
-##                 row.names = FALSE,
-##                 sep = ",")
-## }
-
-
-
-## -------------------------------------------------------------------------- ##
-## TESTS                                                                      ##
-## -------------------------------------------------------------------------- ##
-## countries <- get.WorldBank.countries()
-
-## get.WorldBank.souces()
-## d <- get.WorldBank.dataset(source = 43)
-## res <- list()
-## res[['DATASET']] <- .createDataset(d)
-## res[['VARIABLES']] <- attributes(res[['DATASET']])$colnames
-
-
-
-## get.WorldBank.souces()
-## df <- get.WorldBank.dataset(source = 20)
-## res <- list()
-## res[['DATASET']] <- .createDataset(df)
-## res[['VARIABLES']] <- attributes(res[['DATASET']])$colnames
-## .saveExcel(l = res,
-##            file = "/Users/jankocizel/Downloads/test.xlsx")
-
+## l <- queryWorldBankVariableList("revenue")
+## undebug(getWorldBankDataSeries)
+## dt <- getWorldBankDataSeries(indicators = l$id)
+## out <- createWorldBankDataset(dt)
+## lookup(out)
