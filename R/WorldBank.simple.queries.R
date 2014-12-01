@@ -133,3 +133,17 @@ getQuickWorldBankDataset <- function(pattern){
 ## dt4 <- getQuickWorldBankDataset('dummy')
 ## lookup(dt3)
 ## dt4[iso3 =='NLD']
+## dt4 <- getQuickWorldBankDataset('systemic')
+## lookup(dt4)
+## dt4 <- getQuickWorldBankDataset('imf credit')
+## lookup(dt4)
+
+## dt4[, table(iso3)]
+
+## require(pipeR)
+## queryWorldBankVariableList("government") %>>% data.frame
+## queryWorldBankVariableList("regulat") %>>% data.frame
+## queryWorldBankVariableList("sme ") %>>% data.frame
+
+
+
