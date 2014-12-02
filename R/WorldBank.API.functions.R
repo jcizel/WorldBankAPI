@@ -9,8 +9,8 @@ getWorldBankSources <- function(url="http://api.worldbank.org"
                                 )
     {
         string<- paste(url
-                       ,"sources"
-                       ,sep = "/"
+                      ,"sources"
+                      ,sep = "/"
                        )
 
         query <- paste0(string,
@@ -45,8 +45,8 @@ getWorldBankCountries <- function(url="http://api.worldbank.org",
                                   )
     {
         string<- paste(url
-                       ,type
-                       ,sep = "/"
+                      ,type
+                      ,sep = "/"
                        )
 
         query <- paste0(string,
@@ -84,18 +84,18 @@ getWorldBankIndicatorList <- function(url="http://api.worldbank.org"
     {
         if (is.null(topic)){
             string<- paste(url
-                           ,"source",source
-                           ,"indicators"
-                           ,sep = "/"
+                          ,"source",source
+                          ,"indicators"
+                          ,sep = "/"
                            )
         } else {
             string<- paste(url
-                           ,"topic",topic
-                           ,"indicator"
-                           ,sep = "/"
+                          ,"topic",topic
+                          ,"indicator"
+                          ,sep = "/"
                            )
         }
-       
+        
 
 
         query <- paste0(string,
@@ -141,8 +141,8 @@ getWorldBankSeriesInfo <- function(url="http://api.worldbank.org"
         for (x in ids){
             
             string<- paste(url
-                           ,"indicators", x
-                           ,sep = "/"
+                          ,"indicators", x
+                          ,sep = "/"
                            )
 
             query <- paste0(string,
@@ -371,6 +371,36 @@ lookup <- function(dt){
     o <- attributes(dt)$lookup[order(nonmissRate, decreasing = TRUE)]
     ## o[, paste(strwrap(indicator.value,width = 20, simplify = FALSE), collapse = "\\n")]
     return(o)
+}
+
+
+
+getWorldBankDatasetFromExistingCSV <- function(
+    provider = 'ECB',
+    outfile = paste0('inst/extdata/WorldBank-TS.csv')
+){
+    .f <- list.files(paste0('inst/extdata'),
+                     all.files = TRUE,
+                     full.names = TRUE,
+                     recursive = TRUE,
+                     pattern = "DATA.csv")
+
+    o <-
+        foreach( x = .f,
+                .errorhandling = 'remove'
+                ) %dopar% {
+                    d <- data.table:::fread(x)
+
+                    d
+                }
+
+    out <- rbindlist(o, fill = TRUE)
+
+    out <- out[!is.na(value)]
+
+    if (!is.null(outfile)) write.csv(out, file = outfile)
+
+    return(out)
 }
 
 
