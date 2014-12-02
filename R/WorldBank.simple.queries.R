@@ -24,7 +24,8 @@ queryWorldBankVariableList <- function(pattern = "") {
         v <- WorldBankAPI:::getWorldBankListOfVariables()
     }
 
-    out <- v[ (toupper(name) %like% toupper(pattern))
+    out <- v[ (toupper(id) %like% toupper(pattern))
+             |(toupper(name) %like% toupper(pattern))
              |(toupper(sourceNote) %like% toupper(pattern))][,list(source.id,id,name)]
 
     return(out)
