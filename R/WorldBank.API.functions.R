@@ -250,7 +250,7 @@ getWorldBankDataset <- function(
 
             dat <- rbindlist(dat, fill = TRUE)                        
 
-            return(dat[!is.na(value)])
+            return(dat)
         }
 
     result.list <- Filter(function(x) !is.null(x), result.list)
@@ -308,6 +308,7 @@ getAllWorldBankData <- function(datafolder = './inst/extdata',
     return(NULL)
 }
 
+## getAllWorldBankData(sourceids = c('20','23','22'))
 ## getAllWorldBankData()
 
 ##' .. content for \description{} (no empty lines) ..

@@ -94,7 +94,7 @@ getWorldBankDataSeries <- function(
 
     ## POST-PROCESSING
     .r[, value := as.numeric(value)]
-    .r[, date := as.Date(paste0(date,"-12-31"),"%Y-%m-%d")]
+    ## .r[, date := as.Date(paste0(date,"-12-31"),"%Y-%m-%d")]
 
     result <- .r[!is.na(value)]
     
