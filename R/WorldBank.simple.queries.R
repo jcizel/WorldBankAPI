@@ -53,7 +53,7 @@ checkWorldBankCache <- function(
                      recursive = TRUE
                      )
     if ('WorldBank-TS.csv' %in% .f){
-        .cache <- fread(input = paste0(cache.dir,'/WorldBank-TS.csv'),row.names = FALSE)
+        .cache <- fread(input = paste0(cache.dir,'/WorldBank-TS.csv'))
     } else {
         .cache <- getWorldBankDatasetFromExistingCSV()
     }
