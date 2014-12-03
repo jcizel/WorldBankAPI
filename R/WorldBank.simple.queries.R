@@ -31,6 +31,41 @@ queryWorldBankVariableList <- function(pattern = "") {
     return(out)
 }
 
+## indicators <- c("IQ.CPA.BREG.XQ", "IQ.CPA.DEBT.XQ", "IQ.CPA.ECON.XQ", "IQ.CPA.ENVR.XQ", 
+## "IQ.CPA.FINQ.XQ", "IQ.CPA.FINS.XQ", "IQ.CPA.FISP.XQ", "IQ.CPA.GNDR.XQ", 
+## "IQ.CPA.HRES.XQ", "IQ.CPA.IRAI.XQ")
+
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title 
+##' @param cache.dir 
+##' @param indicators 
+##' @return 
+##' @author Janko Cizel
+checkWorldBankCache <- function(
+    cache.dir = '../WorldBankAPI/inst/extdata',
+    indicators)
+{
+    .f <- list.files(paste0(cache.dir),
+                     all.files = TRUE,
+                     full.names = FALSE,
+                     recursive = TRUE
+                     )
+    if ('WorldBank-TS.csv' %in% .f){
+        .cache <- fread(input = paste0(cache.dir,'/WorldBank-TS.csv'),row.names = FALSE)
+    } else {
+        .cache <- getWorldBankDatasetFromExistingCSV()
+    }
+
+    out <- .cache[indicator.id %in% indicators][,-c(1,2), with = FALSE]
+
+    out[, value := as.numeric(value)]
+    out[, date := GeneralUtilities::convertToDate(date)]
+
+    return(out)
+}
+
 getWorldBankDataSeries <- function(
     url="http://api.worldbank.org"
    ,indicators = c('')

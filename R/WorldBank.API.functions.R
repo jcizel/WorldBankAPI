@@ -376,7 +376,6 @@ lookup <- function(dt){
 
 
 getWorldBankDatasetFromExistingCSV <- function(
-    provider = 'ECB',
     outfile = paste0('inst/extdata/WorldBank-TS.csv')
 ){
     .f <- list.files(paste0('inst/extdata'),
